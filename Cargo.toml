@@ -1,6 +1,19 @@
 [package]
 name = "diff-rs"
 version = "0.1.0"
-authors = ["Miguel Berrio <miguelberrio91@gmail.com>"]
+authors = ["Miguel Berrio <mail@miguelberrio.xyz>", "Dimitrij Vogt <divogt@dima23.de>"]
+description = "A Rust text diffing and assertion library."
+# repository = ""
+# documentation = ""
+readme = "README.md"
+# categories = ["text-processing", "development-tools::testing"]
+keywords = ["diff", "text", "compare", "changes", "assert", "git", "git-diff"]
+license = "MIT"
 
 [dependencies]
+clap = "2.*"
+regex = "1"
+
+[[bin]]
+name = "diff-rs"
+doc = false
