@@ -1,0 +1,6 @@
+[package]
+name = "diff-rs"
+version = "0.1.0"
+authors = ["Miguel Berrio <miguelberrio91@gmail.com>"]
+
+[dependencies]
