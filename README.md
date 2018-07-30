@@ -1,88 +1,77 @@
 # diff.rs
 
-One Paragraph of project description goes here
+A more beautiful and readable diff output for ...
+
+## Screenshot
+
+![diff.rs](http://via.placeholder.com/800x600)
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-### Prerequisites
-
-What things you need to install the software and how to install them
+Install it in different ways:
 
 ```
-Give examples
+cargo install diff.rs
 ```
 
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+or directly over github:
 
 ```
-Give the example
+git clone https://github.com/miguelberrio91/diff.rs
+cd diff.rs
+make
+sudo make install
 ```
 
-And repeat
+## Usage
 
+**Compare two files**
 ```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
+./file1
+---
+This is a Test
 ```
 
-### And coding style tests
-
-Explain what these tests test and why
-
 ```
-Give an example
+./file2
+---
+This is going to test
 ```
 
-## Deployment
+```
+$ diff-rs file1 file2
+```
 
-Add additional notes about how to deploy this on a live system
+```
+---
+file1
+---
+1 | This is --a T-- est
+1 | This is __going to t__ est
+```
 
-## Built With
+**Git diff**
+```
+$ git diff | diff-rs -c
+```
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
+```
+---
+  | file1
+---                     | ---
+1 | This is --a T-- est | This is __going to t__ est
+```
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+Feel free to open a pull request or only a issue to contribute to this project.
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Miguel Berrio** - *Initial work* - [gh/miguelberrio91](https://github.com/miguelberrio91)
+* **Dimitrij Vogt** - *Initial work* - [gh/dvogt23](https://github.com/dvogt23)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/miguelberrio91/diff.rs/contributors) who participated in this project.
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
-
