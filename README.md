@@ -61,6 +61,7 @@ $ git diff | diff-rs -c
 ---                     | ---
 1 | This is --a T-- est | This is __going to t__ est
 ```
+
 ## Contributing
 
 Feel free to open a pull request or only a issue to contribute to this project.
