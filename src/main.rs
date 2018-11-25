@@ -1,13 +1,16 @@
-use std::io;
+mod parser;
+mod file;
+mod printer;
 
 #[macro_use]
 extern crate clap;
 
+use parser::*;
+use file::*;
+
 use clap::{App, Arg};
 use std::io::BufRead;
-use std::io::BufReader;
-use std::fs::File;
-use std::io::Read;
+use std::io;
 
 fn main() {
 
@@ -15,56 +18,33 @@ fn main() {
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
-        .about("A rust text diffing and assertion library.")
-        .long_about("A more beautiful and readable diff output.")
-        .arg(
-            Arg::with_name("SOURCE")
-                .help("Set the source file for diff")
-                .long_help(
-                    "Set a path to the source file to diff with another file",
-                )
-                .index(1)
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("DESTINATION")
-                .help("Set the destination file for diff")
-                .long_help(
-                    "Set a path to the destination file to diff with the source file",
-                )
-                .index(2)
-                .takes_value(true),
-        )
+        .about(crate_description!())
+        .long_about(crate_description!())
         .arg(Arg::with_name("columnview")
             .short("c")
             .long("column")
             .help("Show in 2 columnview")
         ).get_matches();
 
-    let column_view = matches.value_of("columnview").unwrap_or("");
-    let source_file = matches.value_of("source").unwrap_or("");
-    let destination_file = matches.value_of("destination").unwrap_or("");
-
-//    println!("SOURCE {:?}", source_file);
-//    println!("DEST {:?}", destination_file);
-//    println!("COLUMN {:?}", column_view);
+    let column_view = matches.value_of("columnview");
 
     let stdin = io::stdin();
 
     let mut lines: Vec<String> = vec![];
     for line in stdin.lock().lines() {
-        lines.push(line.unwrap());
+        let line = line.expect("Could not read line from standard in");
+        lines.push(line);
     }
 
-    differ(&lines);
-}
-
-fn differ(line: &Vec<String>) {
-    line.iter().for_each(|f| println!("{}", f));
+    let file = parse_content(&lines);
+    
+    printer::print(&file);
 }
 
 // Test cases
 use std::path::PathBuf;
+use std::fs::File;
+use std::io::Read;
 
 #[test]
 fn test_with_diff_file() {
@@ -76,7 +56,7 @@ fn test_with_diff_file() {
     let mut diff_file = File::open(test_diff_path).expect("file not found");
 
     let mut diff_content = String::new();
-    diff_file.read_to_stri	g(&mut diff_content)
+    diff_file.read_to_string(&mut diff_content)
         .expect("something went wrong reading the file");
 
     println!("File content:\n{}", diff_content);
