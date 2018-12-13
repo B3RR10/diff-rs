@@ -11,6 +11,8 @@ keywords = ["diff", "text", "compare", "changes", "assert", "git", "git-diff"]
 license = "MIT"
 
 [dependencies]
+term_size = "0.3.*"
+ansi_term = "0.11"
 clap = "2.*"
 regex = "1"
 

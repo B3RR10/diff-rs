@@ -27,27 +27,14 @@ sudo make install
 
 **Compare two files**
 ```
-./file1
----
-This is a Test
-```
-
-```
-./file2
----
-This is going to test
-```
-
-```
-$ diff-rs file1 file2
-```
-
-```
----
-file1
----
-1 | This is --a T-- est
-1 | This is __going to t__ est
+───┬─────────────────────────────────────────────────────────────────
+   │ M Cargo.toml @5ac01d12897f
+───┼─────────────────────────────────────────────────────────────────
+ 1 │ #!/usr/bin/env bash
+ 2 │
+ 3 │-echo "Test"
+ 3 │+echo "Test is going on"
+───┴─────────────────────────────────────────────────────────────────
 ```
 
 **Git diff**
@@ -56,10 +43,14 @@ $ git diff | diff-rs -c
 ```
 
 ```
----
-  | file1
----                     | ---
-1 | This is --a T-- est | This is __going to t__ est
+───┬─────────────────────────────────────────────────────────────────
+   │ M Cargo.toml @5ac01d12897f
+───┼─────────────────────────────────────────────────────────────────
+ 1 │ #!/usr/bin/env bash
+ 2 │
+ 3 │-echo "Test"
+ 3 │+echo "Test is going on"
+───┴─────────────────────────────────────────────────────────────────
 ```
 
 ## Contributing
