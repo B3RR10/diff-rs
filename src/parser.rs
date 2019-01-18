@@ -1,29 +1,29 @@
 //! The parser analyses the diff content and return the file(s) to the printer
 //! The modified lines get the same line numbers in the hunk content.
 
-use file::{File, Hunk, Line, MODIFIER};
+use file::{File, Hunk, Line, LINEMOD, MODIFIER};
 
-pub fn parse_content(input: &Vec<String>) -> Vec<File> {
+pub fn parse_content(_input: &String) -> Vec<File> {
     let mut content: Vec<Line> = vec![];
 
     // create sample content
     content.push(Line {
-        modifier: MODIFIER::NOP,
+        modifier: LINEMOD::NOP,
         line_number: 1,
         line: String::from(" #!/usr/bin/env bash"),
     });
     content.push(Line {
-        modifier: MODIFIER::NOP,
+        modifier: LINEMOD::NOP,
         line_number: 2,
         line: String::from(" "),
     });
     content.push(Line {
-        modifier: MODIFIER::DELETE,
+        modifier: LINEMOD::REM,
         line_number: 3,
         line: String::from("-echo \"Test\""),
     });
     content.push(Line {
-        modifier: MODIFIER::ADD,
+        modifier: LINEMOD::ADD,
         line_number: 3,
         line: String::from("+echo \"Test is going on\""),
     });

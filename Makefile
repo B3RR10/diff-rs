@@ -1,5 +1,6 @@
 COLOR ?= always # Valid COLOR options: {always, auto, never}
-CARGO = cargo --color $(COLOR)
+CARGO ?= cargo --color $(COLOR)
+WATCH ?= cargo watch -c -x
 
 .PHONY: all bench build check clean doc install publish run test update
 
@@ -29,6 +30,9 @@ publish:
 
 run: build
 	@$(CARGO) run
+
+watch:
+	@$(WATCH) check
 
 test: test1 test2 test3
 

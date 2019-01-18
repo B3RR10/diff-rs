@@ -17,12 +17,18 @@ pub enum MODIFIER {
     MODIFIED,
     RENAMED,
     DELETE,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum LINEMOD {
+    ADD,
+    REM,
     NOP,
 }
 
 #[derive(Debug, Clone)]
 pub struct Line {
-    pub modifier: MODIFIER,
+    pub modifier: LINEMOD,
     pub line_number: usize,
     pub line: String,
 }

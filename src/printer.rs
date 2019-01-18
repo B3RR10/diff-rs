@@ -6,7 +6,7 @@ extern crate ansi_term;
 extern crate term_size;
 
 use self::ansi_term::{Colour, Style};
-use file::{File, Line, MODIFIER};
+use file::{File, Line, LINEMOD, MODIFIER};
 
 // file border colour
 const FIXED_COLOUR: u8 = 244;
@@ -15,7 +15,8 @@ const FIXED_COLOUR: u8 = 244;
 // for border, modifier and the outline painting
 const LINE: char = '─';
 const LINE_ANCHOR_UP: char = '┬';
-const LINE_ANCHOR_DOWN: char = '┼';
+const LINE_ANCHOR_MIDDLE: char = '┼';
+const LINE_ANCHOR_DOWN: char = '┴';
 const LINENUMBER_SEPERATOR: char = '│';
 const LINE_CUT1: char = '⸝';
 const LINE_CUT2: char = '⸜';
@@ -31,7 +32,7 @@ const MODIFIER_DELETE: char = 'D';
 ///
 /// * `files` - files that will be printed
 ///
-pub fn print(files: &Vec<File>) {
+pub fn print(files: &Vec<File>, _columnview: Option<&str>) {
     let terminal_size = term_size::dimensions();
     let term_width = terminal_size.unwrap_or((0, 0)).0;
 
@@ -55,7 +56,7 @@ pub fn print(files: &Vec<File>) {
         // filename
         print_line(&term_width, &ln_width, LINE_ANCHOR_UP);
         print_filename(&file.modifier, &file.filename, &file.commit_id, &ln_width);
-        print_line(&term_width, &ln_width, LINE_ANCHOR_DOWN);
+        print_line(&term_width, &ln_width, LINE_ANCHOR_MIDDLE);
 
         // hunks
         for i in 0..file.hunks.len() {
@@ -67,7 +68,7 @@ pub fn print(files: &Vec<File>) {
             }
         }
 
-        print_line(&term_width, &ln_width, '┴');
+        print_line(&term_width, &ln_width, LINE_ANCHOR_DOWN);
     });
 }
 
@@ -143,7 +144,6 @@ fn print_filename(modifier: &MODIFIER, filename: &str, commit_id: &str, ln_width
         MODIFIER::MODIFIED => Colour::Yellow.bold().paint(MODIFIER_MODIFIED.to_string()),
         MODIFIER::RENAMED => Colour::Purple.bold().paint(MODIFIER_MODIFIED.to_string()),
         MODIFIER::DELETE => Colour::Red.bold().paint(MODIFIER_DELETE.to_string()),
-        MODIFIER::NOP => Colour::Red.bold().paint(MODIFIER_DELETE.to_string()),
     };
 
     for _ in 1..*ln_width {
@@ -184,9 +184,8 @@ fn print_line_content(ln_width: &usize, line: &Line) {
     );
 
     match line.modifier {
-        MODIFIER::ADD => println!("{}", Colour::Green.paint(line.line.to_string())),
-        MODIFIER::NOP => println!("{}", Colour::White.paint(line.line.to_string())),
-        MODIFIER::DELETE => println!("{}", Colour::Red.paint(line.line.to_string())),
-        _ => {}
+        LINEMOD::ADD => println!("{}", Colour::Green.paint(line.line.to_string())),
+        LINEMOD::NOP => println!("{}", Colour::White.paint(line.line.to_string())),
+        LINEMOD::REM => println!("{}", Colour::Red.paint(line.line.to_string())),
     };
 }
