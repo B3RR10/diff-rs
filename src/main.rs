@@ -7,6 +7,8 @@ mod printer;
 
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate nom;
 
 use clap::{App, Arg};
 use std::io::{self, Read};
