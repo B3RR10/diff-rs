@@ -6,7 +6,7 @@ extern crate ansi_term;
 extern crate term_size;
 
 use self::ansi_term::{Colour, Style};
-use file::{File, Line, LINEMOD, MODIFIER};
+use file::{File, Hunk, LINE, MODIFIER};
 
 // file border colour
 const FIXED_COLOUR: u8 = 244;
@@ -39,18 +39,7 @@ pub fn print(files: &Vec<File>, _columnview: Option<&str>) {
     // for every file in the diff
     files.iter().for_each(|file| {
         // linenumber width
-        let max_line_number = file
-            .hunks
-            .iter()
-            .map(|hunk| {
-                hunk.content
-                    .iter()
-                    .map(|line| line.line_number)
-                    .max()
-                    .unwrap()
-            })
-            .max()
-            .unwrap();
+        let max_line_number = file.get_max_line_number_size();
         let ln_width = max_line_number.to_string().chars().count() + 3;
 
         // filename
@@ -166,12 +155,12 @@ fn print_filename(modifier: &MODIFIER, filename: &str, commit_id: &str, ln_width
 /// * `ln_width` - linenumber column width for indent
 /// * `line` - the line object with their modifiers and content
 ///
-fn print_line_content(ln_width: &usize, line: &Line) {
+fn print_line_number(ln_width: &usize, line_number: &usize) {
     for mut i in 1..*ln_width {
-        if i + line.line_number.to_string().chars().count() + 1 == *ln_width {
+        if i + line_number.to_string().chars().count() + 1 == *ln_width {
             print!(
                 "{} ",
-                Colour::Fixed(FIXED_COLOUR).paint(line.line_number.to_string())
+                Colour::Fixed(FIXED_COLOUR).paint(line_number.to_string())
             );
             break;
         } else {
@@ -182,10 +171,44 @@ fn print_line_content(ln_width: &usize, line: &Line) {
         "{}",
         Colour::Fixed(FIXED_COLOUR).paint(LINENUMBER_SEPERATOR.to_string())
     );
+}
 
-    match line.modifier {
-        LINEMOD::ADD => println!("{}", Colour::Green.paint(line.line.to_string())),
-        LINEMOD::NOP => println!("{}", Colour::White.paint(line.line.to_string())),
-        LINEMOD::REM => println!("{}", Colour::Red.paint(line.line.to_string())),
-    };
+fn print_line_content(ln_width: &usize, line: &LINE) {
+    match line {
+        LINE::ADD((nr, line)) => {
+            print_line_number(&ln_width, &nr);
+            println!("{}", Colour::Green.paint(format!("+{}", line.to_string())))
+        }
+        LINE::REM((nr, line)) => {
+            print_line_number(&ln_width, &nr);
+            println!("{}", Colour::Red.paint(format!("-{}", line.to_string())))
+        }
+        LINE::NOP((_, nr_right, line)) => {
+            print_line_number(&ln_width, &nr_right);
+            println!("{}", Colour::White.paint(format!(" {}", line.to_string())))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn print_file_test() {
+        let file: File = File::new(
+            MODIFIER::MODIFIED,
+            "filename.rs".into(),
+            "23jh23lkl".into(),
+            vec![Hunk::new(vec![
+                LINE::ADD((4, "added line...".into())),
+                LINE::NOP((5, 6, "line...".into())),
+                LINE::NOP((6, 7, "line...".into())),
+                LINE::NOP((7, 8, "line...".into())),
+                LINE::REM((9, "removed line...".into())),
+                LINE::NOP((10, 11, "line...".into())),
+            ])],
+        );
+
+        print(&vec![file], None)
+    }
 }

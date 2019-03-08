@@ -19,27 +19,20 @@ pub enum MODIFIER {
     DELETE,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum LINEMOD {
-    ADD,
-    REM,
-    NOP,
-}
-
 #[derive(Debug, Clone)]
-pub struct Line {
-    pub modifier: LINEMOD,
-    pub line_number: usize,
-    pub line: String,
+pub enum LINE {
+    ADD((usize, String)),
+    REM((usize, String)),
+    NOP((usize, usize, String)),
 }
 
 #[derive(Debug, Clone)]
 pub struct Hunk {
-    pub content: Vec<Line>,
+    pub content: Vec<LINE>,
 }
 
 impl Hunk {
-    pub fn new(content: Vec<Line>) -> Hunk {
+    pub fn new(content: Vec<LINE>) -> Hunk {
         Hunk { content: content }
     }
 }
@@ -66,6 +59,31 @@ impl File {
             commit_id: commit_id,
             hunks: hunks,
         }
+    }
+
+    pub fn get_max_line_number_size(&self) -> usize {
+        self.hunks
+            .iter()
+            .map(|hunk| {
+                hunk.content
+                    .iter()
+                    .map(|line| match line {
+                        LINE::ADD((nr, _)) => nr,
+                        LINE::REM((nr, _)) => nr,
+                        LINE::NOP((nr1, nr2, _)) => {
+                            if nr1 > nr2 {
+                                nr1
+                            } else {
+                                nr2
+                            }
+                        }
+                    })
+                    .max()
+                    .unwrap()
+            })
+            .max()
+            .unwrap()
+            .clone()
     }
 }
 
