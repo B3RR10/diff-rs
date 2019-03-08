@@ -13,7 +13,7 @@ enum RawLine<'a> {
 #[derive(Debug, PartialEq)]
 struct RawFileHeader<'a> {
     filenames: (&'a str, &'a str),
-    is_deleted: bool,
+    modifier: MODIFIER,
     commit_id: &'a str,
 }
 
@@ -48,7 +48,7 @@ named!(parse_filename(&str) -> ( &str, &str ), do_parse!(
 
 // "deleted file mode 100644\n";
 named!(parse_delete_file(&str) -> Option<&str>,
-        opt!(tag!("deleted"))
+        opt!(alt!( tag!("deleted") | tag!("new file") | tag!("rename") ))
 );
 
 // "index 089fe5f..384ac88 100644\n";
@@ -66,9 +66,16 @@ named!(parse_raw_file_header(&str) -> RawFileHeader, do_parse!(
         commit_id: parse_commit_id >>
         (RawFileHeader {
             filenames,
-            is_deleted: match is_deleted {
-                Some(_) => true,
-                None => false,
+            modifier: match is_deleted {
+                Some(modifier) => {
+                    match modifier {
+                        "deleted" => MODIFIER::DELETE,
+                        "new file" => MODIFIER::ADD,
+                        "rename" => MODIFIER::RENAMED,
+                        _ => unreachable!()
+                    }
+                },
+                None => MODIFIER::MODIFIED,
             },
             commit_id
         })
@@ -161,11 +168,7 @@ pub fn parse_content(input: &String) -> Vec<File> {
     let mut parsed_files: Vec<File> = Vec::new();
 
     for raw_file in raw_files {
-        let modifier: MODIFIER = match &raw_file.header.is_deleted {
-            true => MODIFIER::DELETE,
-            false => MODIFIER::MODIFIED,
-        };
-
+        let modifier = raw_file.header.modifier;
         let filename: String = raw_file.header.filenames.0.into();
         let commit_id: String = raw_file.header.commit_id.into();
 
@@ -281,7 +284,7 @@ index 2b2338d..43febe7 100644
                 assert_eq!(
                     RawFileHeader {
                         filenames: ("file2_renamed.txt", "file2_renamed.txt",),
-                        is_deleted: false,
+                        modifier: MODIFIER::MODIFIED,
                         commit_id: "43febe7",
                     },
                     result
@@ -480,7 +483,7 @@ index 82ef95f..1f77505 100644
                 RawFile {
                     header: RawFileHeader {
                         filenames: ("src/main.rs", "src/main.rs"),
-                        is_deleted: false,
+                        modifier: MODIFIER::MODIFIED,
                         commit_id: "1f77505"
                     },
                     hunks: vec![RawFileHunk {
@@ -539,7 +542,7 @@ index 772563d..01d1a6e 100644
                     RawFile {
                         header: RawFileHeader {
                             filenames: ("file2.txt", "file2.txt"),
-                            is_deleted: false,
+                            modifier: MODIFIER::MODIFIED,
                             commit_id: "01d1a6e"
                         },
                         hunks: vec![
@@ -607,7 +610,7 @@ index 35dee2c..a66e579 100644
                     RawFile {
                         header: RawFileHeader {
                             filenames: ("file1.txt", "file1.txt"),
-                            is_deleted: false,
+                            modifier: MODIFIER::MODIFIED,
                             commit_id: "0ee5d0d"
                         },
                         hunks: vec![RawFileHunk {
@@ -623,7 +626,7 @@ index 35dee2c..a66e579 100644
                     RawFile {
                         header: RawFileHeader {
                             filenames: ("file2_renamed.txt", "file2_renamed.txt"),
-                            is_deleted: false,
+                            modifier: MODIFIER::MODIFIED,
                             commit_id: "a66e579"
                         },
                         hunks: vec![RawFileHunk {
