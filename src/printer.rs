@@ -194,6 +194,7 @@ fn print_line_content(ln_width: &usize, line: &LINE) {
 mod tests {
     use super::*;
     #[test]
+    #[ignore]
     fn print_file_test() {
         let file: File = File::new(
             MODIFIER::MODIFIED,

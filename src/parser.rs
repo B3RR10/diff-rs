@@ -1,24 +1,26 @@
 //! Preprocess the input to convert it to raw structures
 
+use file::{File, Hunk, LINE, MODIFIER};
+
 #[derive(Debug, PartialEq)]
 #[allow(dead_code)]
-pub enum LINE<'a> {
+enum RawLine<'a> {
     Left(&'a str),
     Right(&'a str),
     Both(&'a str),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct RawFileHeader<'a> {
+struct RawFileHeader<'a> {
     filenames: (&'a str, &'a str),
     is_deleted: bool,
     commit_id: &'a str,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct RawFileHunk<'a> {
+struct RawFileHunk<'a> {
     line_info: (u32, u32, u32, u32),
-    lines: Vec<LINE<'a>>,
+    lines: Vec<RawLine<'a>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -78,7 +80,6 @@ named!(parse_u32(&str) -> Result<u32, std::num::ParseIntError>,
 
 // "@@ -1,3 +1,3 @@\n";
 named!(parse_lines_info(&str) -> (u32, u32, u32, u32), do_parse!(
-        // opt!(take_until_and_consume!("@@ -")) >>
         tag!("@@ -") >>
         start_line_left: parse_u32 >>
         tag!(",") >>
@@ -91,31 +92,31 @@ named!(parse_lines_info(&str) -> (u32, u32, u32, u32), do_parse!(
         (start_line_left.unwrap(), lines_left.unwrap(), start_line_right.unwrap(), lines_right.unwrap())
 ));
 
-named!(parse_line_both(&str) -> LINE, do_parse!(
+named!(parse_line_both(&str) -> RawLine, do_parse!(
         tag!(" ") >>
         content: take_till!(is_new_line) >>
-        (LINE::Both(content))
+        (RawLine::Both(content))
 ));
 
-named!(parse_line_left(&str) -> LINE, do_parse!(
+named!(parse_line_left(&str) -> RawLine, do_parse!(
         tag!("-") >>
         content: take_till!(is_new_line) >>
-        (LINE::Left(content))
+        (RawLine::Left(content))
 ));
 
-named!(parse_line_right(&str) -> LINE, do_parse!(
+named!(parse_line_right(&str) -> RawLine, do_parse!(
         tag!("+") >>
         content: take_till!(is_new_line) >>
-        (LINE::Right(content))
+        (RawLine::Right(content))
 ));
 
-named!(parse_line(&str) -> LINE, do_parse!(
+named!(parse_line(&str) -> RawLine, do_parse!(
         line: alt!(parse_line_both | parse_line_left | parse_line_right) >>
         opt!(alt!(tag!("\n") | eof!())) >>
         (line)
 ));
 
-named!(parse_lines(&str) -> Vec<LINE>,
+named!(parse_lines(&str) -> Vec<RawLine>,
        many0!(complete!(parse_line))
 );
 
@@ -141,8 +142,65 @@ named!(parse_raw_files_intern(&str) -> Vec<RawFile>,
        many0!(complete!(parse_raw_file))
 );
 
-pub fn parse_raw_files<'a>(input: &str) -> Vec<RawFile<'a>> {
-    vec![]
+pub fn parse_raw_files<'a>(input: &'a str) -> Result<Vec<RawFile<'a>>, String> {
+    match parse_raw_files_intern(input) {
+        Ok((_remaining, result)) => {
+            if !_remaining.is_empty() {
+                Err("Error parsing file.".into())
+            } else {
+                Ok(result)
+            }
+        }
+        Err(e) => Err(format!("Error parsing file. {}", e)),
+    }
+}
+
+pub fn parse_content(input: &String) -> Vec<File> {
+    let raw_files: Vec<RawFile> = parse_raw_files(input).unwrap();
+
+    let mut parsed_files: Vec<File> = Vec::new();
+
+    for raw_file in raw_files {
+        let modifier: MODIFIER = match &raw_file.header.is_deleted {
+            true => MODIFIER::DELETE,
+            false => MODIFIER::MODIFIED,
+        };
+
+        let filename: String = raw_file.header.filenames.0.into();
+        let commit_id: String = raw_file.header.commit_id.into();
+
+        let mut hunks: Vec<Hunk> = Vec::new();
+        for hunk in &raw_file.hunks {
+            let mut lines: Vec<LINE> = Vec::new();
+            let mut line_nr_left = hunk.line_info.0;
+            let mut line_nr_right = hunk.line_info.2;
+
+            for line in &hunk.lines {
+                match line {
+                    RawLine::Left(content) => {
+                        lines.push(LINE::REM((line_nr_left as usize, String::from(*content))));
+                        line_nr_left += 1;
+                    }
+                    RawLine::Right(content) => {
+                        lines.push(LINE::ADD((line_nr_right as usize, String::from(*content))));
+                        line_nr_right += 1;
+                    }
+                    RawLine::Both(content) => {
+                        lines.push(LINE::NOP((
+                            line_nr_left as usize,
+                            line_nr_right as usize,
+                            String::from(*content),
+                        )));
+                        line_nr_right += 1;
+                        line_nr_left += 1;
+                    }
+                }
+            }
+            hunks.push(Hunk::new(lines));
+        }
+        parsed_files.push(File::new(modifier, filename, commit_id, hunks))
+    }
+    parsed_files
 }
 
 /* --------------------------------------------------------- */
@@ -256,7 +314,7 @@ index 2b2338d..43febe7 100644
         let input = " This is a line\n";
         match parse_line_both(&input[..]) {
             Ok((_remaining, result)) => {
-                assert_eq!(LINE::Both("This is a line"), result);
+                assert_eq!(RawLine::Both("This is a line"), result);
             }
             Err(e) => {
                 println!("Error: {:?}", e);
@@ -270,7 +328,7 @@ index 2b2338d..43febe7 100644
         let input = "-This is a line\n";
         match parse_line_left(&input[..]) {
             Ok((_remaining, result)) => {
-                assert_eq!(LINE::Left("This is a line"), result);
+                assert_eq!(RawLine::Left("This is a line"), result);
             }
             Err(e) => {
                 println!("Error: {:?}", e);
@@ -284,7 +342,7 @@ index 2b2338d..43febe7 100644
         let input = "+This is a line\n";
         match parse_line_right(&input[..]) {
             Ok((_remaining, result)) => {
-                assert_eq!(LINE::Right("This is a line"), result);
+                assert_eq!(RawLine::Right("This is a line"), result);
             }
             Err(e) => {
                 println!("Error: {:?}", e);
@@ -299,7 +357,7 @@ index 2b2338d..43febe7 100644
         match parse_line(&input[..]) {
             Ok((remaining, result)) => {
                 assert!(remaining.is_empty());
-                assert_eq!(LINE::Both("This is a line"), result);
+                assert_eq!(RawLine::Both("This is a line"), result);
             }
             Err(e) => {
                 println!("Error: {:?}", e);
@@ -314,7 +372,7 @@ index 2b2338d..43febe7 100644
         match parse_line(&input[..]) {
             Ok((remaining, result)) => {
                 assert!(remaining.is_empty());
-                assert_eq!(LINE::Left("This is a line"), result);
+                assert_eq!(RawLine::Left("This is a line"), result);
             }
             Err(e) => {
                 println!("Error: {:?}", e);
@@ -329,7 +387,7 @@ index 2b2338d..43febe7 100644
         match parse_line(&input[..]) {
             Ok((remaining, result)) => {
                 assert!(remaining.is_empty());
-                assert_eq!(LINE::Right("This is a line"), result);
+                assert_eq!(RawLine::Right("This is a line"), result);
             }
             Err(e) => {
                 println!("Error: {:?}", e);
@@ -346,10 +404,10 @@ index 2b2338d..43febe7 100644
                 assert!(remaining.is_empty());
                 assert_eq!(
                     vec![
-                        LINE::Right("This is a line"),
-                        LINE::Both("this is a both line"),
-                        LINE::Left("This is a left line"),
-                        LINE::Both("Another Both!"),
+                        RawLine::Right("This is a line"),
+                        RawLine::Both("this is a both line"),
+                        RawLine::Left("This is a left line"),
+                        RawLine::Both("Another Both!"),
                     ],
                     result
                 );
@@ -378,12 +436,12 @@ index 2b2338d..43febe7 100644
                     RawFileHunk {
                         line_info: (1, 3, 1, 6),
                         lines: vec![
-                            LINE::Right("Add lines on top"),
-                            LINE::Right("More than one"),
-                            LINE::Right("So... three"),
-                            LINE::Both("And lines on top"),
-                            LINE::Both("very good expanded"),
-                            LINE::Both("that it must break it"),
+                            RawLine::Right("Add lines on top"),
+                            RawLine::Right("More than one"),
+                            RawLine::Right("So... three"),
+                            RawLine::Both("And lines on top"),
+                            RawLine::Both("very good expanded"),
+                            RawLine::Both("that it must break it"),
                         ]
                     },
                     result
@@ -428,17 +486,17 @@ index 82ef95f..1f77505 100644
                     hunks: vec![RawFileHunk {
                         line_info: (47, 9, 47, 9),
                         lines: vec![
-                            LINE::Both("    // }"),
-                            LINE::Both("a"),
-                            LINE::Both("    // let files: Vec<file::File> = parse_content(&lines);"),
-                            LINE::Left("    let files: Vec<file::File> = parse_content(buffer.into_bytes());"),
-                            LINE::Right("    // let files: Vec<file::File> = parse_content(buffer.into_bytes());"),
-                            LINE::Both("a"),
-                            LINE::Left("    printer::print(&files);"),
-                            LINE::Right("    // printer::print(&files);"),
-                            LINE::Both("}"),
-                            LINE::Both("a"),
-                            LINE::Both("// Test cases"),
+                            RawLine::Both("    // }"),
+                            RawLine::Both("a"),
+                            RawLine::Both("    // let files: Vec<file::File> = parse_content(&lines);"),
+                            RawLine::Left("    let files: Vec<file::File> = parse_content(buffer.into_bytes());"),
+                            RawLine::Right("    // let files: Vec<file::File> = parse_content(buffer.into_bytes());"),
+                            RawLine::Both("a"),
+                            RawLine::Left("    printer::print(&files);"),
+                            RawLine::Right("    // printer::print(&files);"),
+                            RawLine::Both("}"),
+                            RawLine::Both("a"),
+                            RawLine::Both("// Test cases"),
                         ]
                     }]
                 },
@@ -488,25 +546,25 @@ index 772563d..01d1a6e 100644
                             RawFileHunk {
                                 line_info: (1, 3, 1, 7),
                                 lines: vec![
-                                    LINE::Right("And lines on top"),
-                                    LINE::Right("very good expanded"),
-                                    LINE::Right("that it must break it"),
-                                    LINE::Right("in two parts..."),
-                                    LINE::Both("This is file 2"),
-                                    LINE::Both("Line betwern"),
-                                    LINE::Both("Second line"),
+                                    RawLine::Right("And lines on top"),
+                                    RawLine::Right("very good expanded"),
+                                    RawLine::Right("that it must break it"),
+                                    RawLine::Right("in two parts..."),
+                                    RawLine::Both("This is file 2"),
+                                    RawLine::Both("Line betwern"),
+                                    RawLine::Both("Second line"),
                                 ]
                             },
                             RawFileHunk {
                                 line_info: (5, 4, 9, 7),
                                 lines: vec![
-                                    LINE::Both("Line"),
-                                    LINE::Both("stays"),
-                                    LINE::Both("here"),
-                                    LINE::Right("And even more lines"),
-                                    LINE::Right(""),
-                                    LINE::Both("Adding more lines of ..."),
-                                    LINE::Right("And more and more"),
+                                    RawLine::Both("Line"),
+                                    RawLine::Both("stays"),
+                                    RawLine::Both("here"),
+                                    RawLine::Right("And even more lines"),
+                                    RawLine::Right(""),
+                                    RawLine::Both("Adding more lines of ..."),
+                                    RawLine::Right("And more and more"),
                                 ]
                             },
                         ]
@@ -555,10 +613,10 @@ index 35dee2c..a66e579 100644
                         hunks: vec![RawFileHunk {
                             line_info: (1, 1, 1, 3),
                             lines: vec![
-                                LINE::Left("Remove line and add another"),
-                                LINE::Right("Remove line and add anothers"),
-                                LINE::Right("Add more lines"),
-                                LINE::Right("And change the first"),
+                                RawLine::Left("Remove line and add another"),
+                                RawLine::Right("Remove line and add anothers"),
+                                RawLine::Right("Add more lines"),
+                                RawLine::Right("And change the first"),
                             ]
                         }]
                     },
@@ -571,11 +629,11 @@ index 35dee2c..a66e579 100644
                         hunks: vec![RawFileHunk {
                             line_info: (1, 4, 1, 4),
                             lines: vec![
-                                LINE::Both("This is file 2"),
-                                LINE::Left("Line between"),
-                                LINE::Right("Line betwern"),
-                                LINE::Both("Second line"),
-                                LINE::Both("line at the end"),
+                                RawLine::Both("This is file 2"),
+                                RawLine::Left("Line between"),
+                                RawLine::Right("Line betwern"),
+                                RawLine::Both("Second line"),
+                                RawLine::Both("line at the end"),
                             ]
                         }]
                     },
@@ -587,5 +645,103 @@ index 35dee2c..a66e579 100644
                 assert!(false)
             }
         }
+    }
+
+    #[test]
+    fn parse_content_1_test() {
+        let input = r#"diff --git a/list.txt b/list.txt
+index 5005045..73ea95f 100644
+--- a/list.txt
++++ b/list.txt
+@@ -1,4 +1,4 @@
+-apples
+ oranges
++pears
+ pineapples
+-kiwis
++kiwi
+"#
+        .into();
+        let result = parse_content(&input);
+        let expected = File::new(
+            MODIFIER::MODIFIED,
+            "list.txt".to_string(),
+            "73ea95f".to_string(),
+            vec![Hunk::new(vec![
+                LINE::REM((1, "apples".to_string())),
+                LINE::NOP((2, 1, "oranges".to_string())),
+                LINE::ADD((2, "pears".to_string())),
+                LINE::NOP((3, 3, "pineapples".to_string())),
+                LINE::REM((4, "kiwis".to_string())),
+                LINE::ADD((4, "kiwi".to_string())),
+            ])],
+        );
+        assert_eq!(vec![expected], result)
+    }
+
+    #[test]
+    fn parse_content_2_test() {
+        let input = r#"diff --git a/list.txt b/list.txt
+index 5005045..73ea95f 100644
+--- a/list.txt
++++ b/list.txt
+@@ -1,4 +1,4 @@
+-apples
+ oranges
++pears
+ pineapples
+-kiwis
++kiwi
+diff --git a/list2.txt b/list2.txt
+index c5b683b..05f5efa 100644
+--- a/list2.txt
++++ b/list2.txt
+@@ -1,7 +1,9 @@
+ milk
+-butter
+ cheese
+ bread
+-crackers
++cracker
+ juice
+ joghurt
++wine
++beers
++water
+"#
+        .into();
+        let result = parse_content(&input);
+        let expected_file_1 = File::new(
+            MODIFIER::MODIFIED,
+            "list.txt".into(),
+            "73ea95f".into(),
+            vec![Hunk::new(vec![
+                LINE::REM((1, "apples".into())),
+                LINE::NOP((2, 1, "oranges".into())),
+                LINE::ADD((2, "pears".into())),
+                LINE::NOP((3, 3, "pineapples".into())),
+                LINE::REM((4, "kiwis".into())),
+                LINE::ADD((4, "kiwi".into())),
+            ])],
+        );
+        let expected_file_2 = File::new(
+            MODIFIER::MODIFIED,
+            "list2.txt".into(),
+            "05f5efa".into(),
+            vec![Hunk::new(vec![
+                LINE::NOP((1, 1, "milk".into())),
+                LINE::REM((2, "butter".into())),
+                LINE::NOP((3, 2, "cheese".into())),
+                LINE::NOP((4, 3, "bread".into())),
+                LINE::REM((5, "crackers".into())),
+                LINE::ADD((4, "cracker".into())),
+                LINE::NOP((6, 5, "juice".into())),
+                LINE::NOP((7, 6, "joghurt".into())),
+                LINE::ADD((7, "wine".into())),
+                LINE::ADD((8, "beers".into())),
+                LINE::ADD((9, "water".into())),
+            ])],
+        );
+        assert_eq!(vec![expected_file_1, expected_file_2], result)
     }
 }

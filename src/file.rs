@@ -11,7 +11,7 @@
 
 use std::fmt;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MODIFIER {
     ADD,
     MODIFIED,
@@ -19,14 +19,14 @@ pub enum MODIFIER {
     DELETE,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum LINE {
     ADD((usize, String)),
     REM((usize, String)),
     NOP((usize, usize, String)),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Hunk {
     pub content: Vec<LINE>,
 }
@@ -43,7 +43,7 @@ impl fmt::Display for Hunk {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct File {
     pub modifier: MODIFIER,
     pub filename: String,
