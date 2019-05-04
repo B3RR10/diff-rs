@@ -6,7 +6,7 @@ extern crate ansi_term;
 extern crate term_size;
 
 use self::ansi_term::{Colour, Style};
-use file::{File, Hunk, LINE, MODIFIER};
+use file::{File, LINE, MODIFIER};
 
 // file border colour
 const FIXED_COLOUR: u8 = 244;
@@ -192,6 +192,7 @@ fn print_line_content(ln_width: &usize, line: &LINE) {
 
 #[cfg(test)]
 mod tests {
+    use super::super::file::Hunk;
     use super::*;
     #[test]
     #[ignore]
