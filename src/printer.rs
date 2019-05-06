@@ -32,7 +32,8 @@ const MODIFIER_DELETE: char = 'D';
 ///
 /// * `files` - files that will be printed
 ///
-pub fn print(files: &Vec<File>, _columnview: Option<&str>) {
+pub fn print(files: &Vec<File>, _columnview: Option<&str>) -> Box<str> {
+    let mut printable_output: String = String::new();
     let terminal_size = term_size::dimensions();
     let term_width = terminal_size.unwrap_or((0, 0)).0;
 
@@ -43,25 +44,40 @@ pub fn print(files: &Vec<File>, _columnview: Option<&str>) {
         let ln_width = max_line_number.to_string().chars().count() + 3;
 
         // filename
-        print_line(&term_width, &ln_width, LINE_ANCHOR_UP);
-        print_filename(&file.modifier, &file.filename, &file.commit_id, &ln_width);
-        print_line(&term_width, &ln_width, LINE_ANCHOR_MIDDLE);
+        printable_output.push_str(&get_horizontal_line(&term_width, &ln_width, LINE_ANCHOR_UP));
+        printable_output.push_str(&get_filename(
+            &file.modifier,
+            &file.filename,
+            &file.commit_id,
+            &ln_width,
+        ));
+        printable_output.push_str(&get_horizontal_line(
+            &term_width,
+            &ln_width,
+            LINE_ANCHOR_MIDDLE,
+        ));
 
         // hunks
         for i in 0..file.hunks.len() {
             for line in &file.hunks[i].content {
-                print_line_content(&ln_width, &line);
+                printable_output.push_str(&get_line_content(&ln_width, &line));
             }
             if file.hunks.len() > 1 && file.hunks.len() - 1 != i {
-                print_cut(&term_width);
+                printable_output.push_str(&get_cut(&term_width));
             }
         }
 
-        print_line(&term_width, &ln_width, LINE_ANCHOR_DOWN);
+        printable_output.push_str(&get_horizontal_line(
+            &term_width,
+            &ln_width,
+            LINE_ANCHOR_DOWN,
+        ));
     });
+
+    Box::from(printable_output)
 }
 
-/// Prints a horizontal line at the beginning, after the filename and at the
+/// Returns a horizontal line at the beginning, after the filename and at the
 /// end of a file.
 ///
 /// # Arguments
@@ -71,54 +87,55 @@ pub fn print(files: &Vec<File>, _columnview: Option<&str>) {
 /// * `indent_char` - the char to print at the indent for the vertical column
 /// line
 ///
-fn print_line(width: &usize, ln_width: &usize, indent_char: char) {
+fn get_horizontal_line(width: &usize, ln_width: &usize, indent_char: char) -> String {
+    let mut line = String::new();
     for i in 1..*width {
         if i == *ln_width {
-            print!(
-                "{}",
-                Colour::Fixed(FIXED_COLOUR).paint(indent_char.to_string())
-            );
+            line.push(indent_char);
         }
-        print!("{}", Colour::Fixed(FIXED_COLOUR).paint(LINE.to_string()));
+        line.push(LINE);
     }
-    println!();
+    line.push_str("\n");
+    Colour::Fixed(FIXED_COLOUR).paint(line).to_string()
 }
 
-/// Print a outline after every hunk in a file to show the cut in a file.
+/// Returns a outline after every hunk in a file to show the cut in a file.
 ///
 /// # Arguments
 ///
 /// * `width` - the terminal width for line length
 ///
-fn print_cut(width: &usize) {
+fn get_cut(width: &usize) -> String {
+    let mut output = String::new();
     // down cut
     for _ in (1..*width).step_by(2) {
-        print!(
+        output.push_str(&format!(
             "{}",
             Colour::Fixed(FIXED_COLOUR).paint(LINE_CUT1.to_string())
-        );
-        print!(
+        ));
+        output.push_str(&format!(
             "{}",
             Colour::Fixed(FIXED_COLOUR).paint(LINE_CUT2.to_string())
-        );
+        ));
     }
-    println!();
+    output.push_str("\n");
 
     // up cut
     for _ in (1..*width).step_by(2) {
-        print!(
+        output.push_str(&format!(
             "{}",
             Colour::Fixed(FIXED_COLOUR).paint(LINE_CUT3.to_string())
-        );
-        print!(
+        ));
+        output.push_str(&format!(
             "{}",
             Colour::Fixed(FIXED_COLOUR).paint(LINE_CUT4.to_string())
-        );
+        ));
     }
-    println!();
+    output.push_str("\n");
+    output
 }
 
-/// Print the filename in the header row of a file
+/// Returns the filename in the header row of a file
 ///
 /// # Arguments
 ///
@@ -127,7 +144,8 @@ fn print_cut(width: &usize) {
 /// * `commit_id` - commit id of the file
 /// * `ln_width` - linenumber column width for indent
 ///
-fn print_filename(modifier: &MODIFIER, filename: &str, commit_id: &str, ln_width: &usize) {
+fn get_filename(modifier: &MODIFIER, filename: &str, commit_id: &str, ln_width: &usize) -> String {
+    let mut output = String::new();
     let modifier_symbol = match modifier {
         MODIFIER::ADD => Colour::Green.bold().paint(MODIFIER_ADD.to_string()),
         MODIFIER::MODIFIED => Colour::Yellow.bold().paint(MODIFIER_MODIFIED.to_string()),
@@ -136,71 +154,91 @@ fn print_filename(modifier: &MODIFIER, filename: &str, commit_id: &str, ln_width
     };
 
     for _ in 1..*ln_width {
-        print!(" ")
+        output.push_str(" ");
     }
-    println!(
-        "{} {} {} {}{}",
+    output.push_str(&format!(
+        "{} {} {} {}{}\n",
         Colour::Fixed(FIXED_COLOUR).paint("│"),
         modifier_symbol,
         Style::new().bold().paint(filename),
         Colour::Blue.bold().paint("@"),
         Colour::Blue.paint(commit_id),
-    );
+    ));
+
+    output
 }
 
-/// Line content with the different colours for the diff
+fn get_line_number(ln_width: &usize, line_number: &usize) -> String {
+    let mut output = String::new();
+    for i in 1..*ln_width {
+        if i + line_number.to_string().chars().count() + 1 == *ln_width {
+            output.push_str(&format!(
+                "{} ",
+                Colour::Fixed(FIXED_COLOUR).paint(line_number.to_string())
+            ));
+            break;
+        } else {
+            output.push_str(" ");
+        }
+    }
+    output.push_str(&format!(
+        "{}",
+        Colour::Fixed(FIXED_COLOUR).paint(LINENUMBER_SEPERATOR.to_string())
+    ));
+
+    output
+}
+
+/// Returns the line content with the different colours for the diff
 ///
 /// # Arguments
 ///
 /// * `ln_width` - linenumber column width for indent
 /// * `line` - the line object with their modifiers and content
 ///
-fn print_line_number(ln_width: &usize, line_number: &usize) {
-    for i in 1..*ln_width {
-        if i + line_number.to_string().chars().count() + 1 == *ln_width {
-            print!(
-                "{} ",
-                Colour::Fixed(FIXED_COLOUR).paint(line_number.to_string())
-            );
-            break;
-        } else {
-            print!(" ");
-        }
-    }
-    print!(
-        "{}",
-        Colour::Fixed(FIXED_COLOUR).paint(LINENUMBER_SEPERATOR.to_string())
-    );
-}
-
-fn print_line_content(ln_width: &usize, line: &LINE) {
+fn get_line_content(ln_width: &usize, line: &LINE) -> String {
+    let mut output = String::new();
     match line {
         LINE::ADD { number, line } => {
-            print_line_number(&ln_width, &number);
-            println!("{}", Colour::Green.paint(format!("+{}", line.to_string())))
+            output.push_str(&get_line_number(&ln_width, &number));
+            output.push_str(&format!(
+                "{}\n",
+                Colour::Green.paint(format!("+{}", line.to_string()))
+            ))
         }
         LINE::REM { number, line } => {
-            print_line_number(&ln_width, &number);
-            println!("{}", Colour::Red.paint(format!("-{}", line.to_string())))
+            output.push_str(&get_line_number(&ln_width, &number));
+            output.push_str(&format!(
+                "{}\n",
+                Colour::Red.paint(format!("-{}", line.to_string()))
+            ))
         }
         LINE::NOP {
             number_left: _,
             number_right,
             line,
         } => {
-            print_line_number(&ln_width, &number_right);
-            println!("{}", Colour::White.paint(format!(" {}", line.to_string())))
+            output.push_str(&get_line_number(&ln_width, &number_right));
+            output.push_str(&format!(
+                "{}\n",
+                Colour::White.paint(format!(" {}", line.to_string()))
+            ))
         }
     }
-}
 
+    output
+}
+/* --------------------------------------------------------- */
+/* ------------------------- TESTS ------------------------- */
+/* --------------------------------------------------------- */
 #[cfg(test)]
 mod tests {
+
     use super::super::file::Hunk;
     use super::*;
     #[test]
-    #[ignore]
     fn print_file_test() {
+        let expected_output = Box::from("\u{1b}[38;5;244m───┬────────────────────────────────────────────────────────────────────────────────────────────────────\n\u{1b}[0m   \u{1b}[38;5;244m│\u{1b}[0m \u{1b}[1;33mM\u{1b}[0m \u{1b}[1mfilename.rs\u{1b}[0m \u{1b}[1;34m@\u{1b}[0m\u{1b}[34m23jh23lkl\u{1b}[0m\n\u{1b}[38;5;244m───┼────────────────────────────────────────────────────────────────────────────────────────────────────\n\u{1b}[0m \u{1b}[38;5;244m4\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[32m+added line...\u{1b}[0m\n \u{1b}[38;5;244m6\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[37m line...\u{1b}[0m\n \u{1b}[38;5;244m9\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[31m-removed line...\u{1b}[0m\n\u{1b}[38;5;244m───┴────────────────────────────────────────────────────────────────────────────────────────────────────\n\u{1b}[0m");
         let file: File = File::new(
             MODIFIER::MODIFIED,
             "filename.rs".into(),
@@ -215,28 +253,15 @@ mod tests {
                     number_right: 6,
                     line: "line...".into(),
                 },
-                LINE::NOP {
-                    number_left: 6,
-                    number_right: 7,
-                    line: "line...".into(),
-                },
-                LINE::NOP {
-                    number_left: 7,
-                    number_right: 8,
-                    line: "line...".into(),
-                },
                 LINE::REM {
                     number: 9,
                     line: "removed line...".into(),
                 },
-                LINE::NOP {
-                    number_left: 10,
-                    number_right: 11,
-                    line: "line...".into(),
-                },
             ])],
         );
 
-        print(&vec![file], None)
+        let term_output = print(&vec![file], None);
+        println!("{}", term_output);
+        assert_eq!(expected_output, term_output);
     }
 }

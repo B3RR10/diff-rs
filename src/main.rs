@@ -35,5 +35,5 @@ fn main() {
 
     let files: Vec<file::File> = parser::parse_content(&buffer);
 
-    printer::print(&files, columnview);
+    println!("{}", printer::print(&files, columnview));
 }
