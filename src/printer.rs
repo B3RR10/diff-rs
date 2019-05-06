@@ -156,7 +156,7 @@ fn print_filename(modifier: &MODIFIER, filename: &str, commit_id: &str, ln_width
 /// * `line` - the line object with their modifiers and content
 ///
 fn print_line_number(ln_width: &usize, line_number: &usize) {
-    for mut i in 1..*ln_width {
+    for i in 1..*ln_width {
         if i + line_number.to_string().chars().count() + 1 == *ln_width {
             print!(
                 "{} ",
@@ -175,16 +175,20 @@ fn print_line_number(ln_width: &usize, line_number: &usize) {
 
 fn print_line_content(ln_width: &usize, line: &LINE) {
     match line {
-        LINE::ADD((nr, line)) => {
-            print_line_number(&ln_width, &nr);
+        LINE::ADD { number, line } => {
+            print_line_number(&ln_width, &number);
             println!("{}", Colour::Green.paint(format!("+{}", line.to_string())))
         }
-        LINE::REM((nr, line)) => {
-            print_line_number(&ln_width, &nr);
+        LINE::REM { number, line } => {
+            print_line_number(&ln_width, &number);
             println!("{}", Colour::Red.paint(format!("-{}", line.to_string())))
         }
-        LINE::NOP((_, nr_right, line)) => {
-            print_line_number(&ln_width, &nr_right);
+        LINE::NOP {
+            number_left: _,
+            number_right,
+            line,
+        } => {
+            print_line_number(&ln_width, &number_right);
             println!("{}", Colour::White.paint(format!(" {}", line.to_string())))
         }
     }
@@ -202,12 +206,34 @@ mod tests {
             "filename.rs".into(),
             "23jh23lkl".into(),
             vec![Hunk::new(vec![
-                LINE::ADD((4, "added line...".into())),
-                LINE::NOP((5, 6, "line...".into())),
-                LINE::NOP((6, 7, "line...".into())),
-                LINE::NOP((7, 8, "line...".into())),
-                LINE::REM((9, "removed line...".into())),
-                LINE::NOP((10, 11, "line...".into())),
+                LINE::ADD {
+                    number: 4,
+                    line: "added line...".into(),
+                },
+                LINE::NOP {
+                    number_left: 5,
+                    number_right: 6,
+                    line: "line...".into(),
+                },
+                LINE::NOP {
+                    number_left: 6,
+                    number_right: 7,
+                    line: "line...".into(),
+                },
+                LINE::NOP {
+                    number_left: 7,
+                    number_right: 8,
+                    line: "line...".into(),
+                },
+                LINE::REM {
+                    number: 9,
+                    line: "removed line...".into(),
+                },
+                LINE::NOP {
+                    number_left: 10,
+                    number_right: 11,
+                    line: "line...".into(),
+                },
             ])],
         );
 
