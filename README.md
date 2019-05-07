@@ -2,6 +2,8 @@
 
 A more beautiful and readable diff output for ...
 
+[![Build Status](https://travis-ci.com/miguelberrio91/diff.rs.svg?token=aFmpCKn8YpqsE7osReyL&branch=develop)](https://travis-ci.com/miguelberrio91/diff.rs)
+
 ## Screenshot
 
 ![diff.rs](http://via.placeholder.com/800x600)
