@@ -26,13 +26,13 @@ const MODIFIER_ADD: char = 'A';
 const MODIFIER_MODIFIED: char = 'M';
 const MODIFIER_DELETE: char = 'D';
 
-/// Main print method tfor printing the file content and the styling
+/// Main print method for printing the file content and the styling
 ///
 /// # Arguments
 ///
 /// * `files` - files that will be printed
 ///
-pub fn print(files: &Vec<File>, _columnview: Option<&str>) -> Box<str> {
+pub fn print(files: &Vec<File>, _columnview: Option<&str>) -> String {
     let mut printable_output: String = String::new();
     let terminal_size = term_size::dimensions();
     let term_width = terminal_size.unwrap_or((0, 0)).0;
@@ -74,7 +74,7 @@ pub fn print(files: &Vec<File>, _columnview: Option<&str>) -> Box<str> {
         ));
     });
 
-    Box::from(printable_output)
+    printable_output
 }
 
 /// Returns a horizontal line at the beginning, after the filename and at the
@@ -238,7 +238,8 @@ mod tests {
     use super::*;
     #[test]
     fn print_file_test() {
-        let expected_output = Box::from("\u{1b}[38;5;244m───┬────────────────────────────────────────────────────────────────────────────────────────────────────\n\u{1b}[0m   \u{1b}[38;5;244m│\u{1b}[0m \u{1b}[1;33mM\u{1b}[0m \u{1b}[1mfilename.rs\u{1b}[0m \u{1b}[1;34m@\u{1b}[0m\u{1b}[34m23jh23lkl\u{1b}[0m\n\u{1b}[38;5;244m───┼────────────────────────────────────────────────────────────────────────────────────────────────────\n\u{1b}[0m \u{1b}[38;5;244m4\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[32m+added line...\u{1b}[0m\n \u{1b}[38;5;244m6\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[37m line...\u{1b}[0m\n \u{1b}[38;5;244m9\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[31m-removed line...\u{1b}[0m\n\u{1b}[38;5;244m───┴────────────────────────────────────────────────────────────────────────────────────────────────────\n\u{1b}[0m");
+        let term_width = term_size::dimensions().unwrap().0;
+        let expected_output = format!("{}   \u{1b}[38;5;244m│\u{1b}[0m \u{1b}[1;33mM\u{1b}[0m \u{1b}[1mfilename.rs\u{1b}[0m \u{1b}[1;34m@\u{1b}[0m\u{1b}[34m23jh23lkl\u{1b}[0m\n{} \u{1b}[38;5;244m4\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[32m+added line...\u{1b}[0m\n \u{1b}[38;5;244m6\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[37m line...\u{1b}[0m\n \u{1b}[38;5;244m9\u{1b}[0m \u{1b}[38;5;244m│\u{1b}[0m\u{1b}[31m-removed line...\u{1b}[0m\n{}", get_horizontal_line(&term_width, &4, LINE_ANCHOR_UP), get_horizontal_line(&term_width, &4, LINE_ANCHOR_MIDDLE), get_horizontal_line(&term_width, &4, LINE_ANCHOR_DOWN));
         let file: File = File::new(
             MODIFIER::MODIFIED,
             "filename.rs".into(),
@@ -260,8 +261,6 @@ mod tests {
             ])],
         );
 
-        let term_output = print(&vec![file], None);
-        println!("{}", term_output);
-        assert_eq!(expected_output, term_output);
+        assert_eq!(expected_output, print(&vec![file], None));
     }
 }
