@@ -2,7 +2,7 @@
 
 A more beautiful and readable diff output for ...
 
-CI: [![Build Status](https://travis-ci.com/miguelberrio91/diff.rs.svg?token=aFmpCKn8YpqsE7osReyL&branch=develop)](https://travis-ci.com/miguelberrio91/diff.rs)
+[![Build Status](https://travis-ci.com/miguelberrio91/diff.rs.svg?token=aFmpCKn8YpqsE7osReyL&branch=develop)](https://travis-ci.com/miguelberrio91/diff.rs)
 
 ## Screenshot
 
