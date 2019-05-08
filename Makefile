@@ -19,7 +19,7 @@ clean:
 	@$(CARGO) clean
 
 doc:
-	@$(CARGO) rustdoc --bin diff-rs --open -- --document-private-items
+	@$(CARGO) rustdoc --bin diff_rs --open -- --document-private-items
 	@xdg-open target/doc/diff_rs/index.html
 
 install: build
@@ -41,9 +41,9 @@ update:
 
 test1: build
 	@cat test/resources/diff.patch | cargo run
-    
+
 test2: build
-	@$(CARGO) test --package diff-rs --bin diff-rs test_with_diff_file -- --nocapture --exact
+	@$(CARGO) test --package diff_rs --bin diff_rs test_with_diff_file -- --nocapture --exact
 
 test3: build
-	@$(CARGO) test --package diff-rs --bin diff-rs test_print_file -- --nocapture --exact
+	@$(CARGO) test --package diff_rs --bin diff_rs test_print_file -- --nocapture --exact

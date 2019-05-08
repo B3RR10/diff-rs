@@ -21,9 +21,19 @@ pub enum MODIFIER {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LINE {
-    ADD((usize, String)),
-    REM((usize, String)),
-    NOP((usize, usize, String)),
+    ADD {
+        number: usize,
+        line: String,
+    },
+    REM {
+        number: usize,
+        line: String,
+    },
+    NOP {
+        number_left: usize,
+        number_right: usize,
+        line: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -68,9 +78,19 @@ impl File {
                 hunk.content
                     .iter()
                     .map(|line| match line {
-                        LINE::ADD((nr, _)) => nr,
-                        LINE::REM((nr, _)) => nr,
-                        LINE::NOP((nr1, nr2, _)) => {
+                        LINE::ADD {
+                            number: nr,
+                            line: _,
+                        } => nr,
+                        LINE::REM {
+                            number: nr,
+                            line: _,
+                        } => nr,
+                        LINE::NOP {
+                            number_left: nr1,
+                            number_right: nr2,
+                            line: _,
+                        } => {
                             if nr1 > nr2 {
                                 nr1
                             } else {

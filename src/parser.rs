@@ -249,19 +249,25 @@ pub fn parse_content(input: &String) -> Vec<File> {
             for line in &hunk.lines {
                 match line {
                     RawLine::Left(content) => {
-                        lines.push(LINE::REM((line_nr_left as usize, String::from(*content))));
+                        lines.push(LINE::REM {
+                            number: line_nr_left as usize,
+                            line: String::from(*content),
+                        });
                         line_nr_left += 1;
                     }
                     RawLine::Right(content) => {
-                        lines.push(LINE::ADD((line_nr_right as usize, String::from(*content))));
+                        lines.push(LINE::ADD {
+                            number: line_nr_right as usize,
+                            line: String::from(*content),
+                        });
                         line_nr_right += 1;
                     }
                     RawLine::Both(content) => {
-                        lines.push(LINE::NOP((
-                            line_nr_left as usize,
-                            line_nr_right as usize,
-                            String::from(*content),
-                        )));
+                        lines.push(LINE::NOP {
+                            number_left: line_nr_left as usize,
+                            number_right: line_nr_right as usize,
+                            line: String::from(*content),
+                        });
                         line_nr_right += 1;
                         line_nr_left += 1;
                     }
@@ -773,12 +779,32 @@ index 5005045..73ea95f 100644
             "list.txt".to_string(),
             "73ea95f".to_string(),
             vec![Hunk::new(vec![
-                LINE::REM((1, "apples".to_string())),
-                LINE::NOP((2, 1, "oranges".to_string())),
-                LINE::ADD((2, "pears".to_string())),
-                LINE::NOP((3, 3, "pineapples".to_string())),
-                LINE::REM((4, "kiwis".to_string())),
-                LINE::ADD((4, "kiwi".to_string())),
+                LINE::REM {
+                    number: 1,
+                    line: "apples".to_string(),
+                },
+                LINE::NOP {
+                    number_left: 2,
+                    number_right: 1,
+                    line: "oranges".to_string(),
+                },
+                LINE::ADD {
+                    number: 2,
+                    line: "pears".to_string(),
+                },
+                LINE::NOP {
+                    number_left: 3,
+                    number_right: 3,
+                    line: "pineapples".to_string(),
+                },
+                LINE::REM {
+                    number: 4,
+                    line: "kiwis".to_string(),
+                },
+                LINE::ADD {
+                    number: 4,
+                    line: "kiwi".to_string(),
+                },
             ])],
         );
         assert_eq!(vec![expected], result)
@@ -905,9 +931,18 @@ rename to list_renamed.txt
             "list3.txt".into(),
             "33e4d8e".into(),
             vec![Hunk::new(vec![
-                LINE::ADD((1, "bananas".into())),
-                LINE::ADD((2, "apples".into())),
-                LINE::ADD((3, "oranges".into())),
+                LINE::ADD {
+                    number: 1,
+                    line: "bananas".into(),
+                },
+                LINE::ADD {
+                    number: 2,
+                    line: "apples".into(),
+                },
+                LINE::ADD {
+                    number: 3,
+                    line: "oranges".into(),
+                },
             ])],
         );
         let expected_file_2 = File::new(
@@ -915,10 +950,22 @@ rename to list_renamed.txt
             "list.txt".into(),
             "0000000".into(),
             vec![Hunk::new(vec![
-                LINE::REM((1, "oranges".into())),
-                LINE::REM((2, "pears".into())),
-                LINE::REM((3, "pineapples".into())),
-                LINE::REM((4, "kiwi".into())),
+                LINE::REM {
+                    number: 1,
+                    line: "oranges".into(),
+                },
+                LINE::REM {
+                    number: 2,
+                    line: "pears".into(),
+                },
+                LINE::REM {
+                    number: 3,
+                    line: "pineapples".into(),
+                },
+                LINE::REM {
+                    number: 4,
+                    line: "kiwi".into(),
+                },
             ])],
         );
         let expected_file_3 = File::new(MODIFIER::RENAMED, "list.txt".into(), "".into(), vec![]);
