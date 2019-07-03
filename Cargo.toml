@@ -3,10 +3,10 @@ name = "diff_rs"
 version = "0.1.0"
 authors = ["Miguel Berrio <me@miguelberrio.xyz>", "Dimitrij Vogt <divogt@dima23.de>"]
 description = "A more beautiful and readable diff output."
-# repository = ""
-# documentation = ""
+repository = ""
+documentation = ""
 readme = "README.md"
-# categories = ["text-processing", "development-tools::testing"]
+categories = ["text-processing", "development-tools::testing"]
 keywords = ["diff", "text", "compare", "changes", "assert", "git", "git-diff"]
 license = "MIT"
 

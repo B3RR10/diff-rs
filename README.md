@@ -1,19 +1,21 @@
 # diff.rs
 
-A more beautiful and readable diff output for ...
+A more beautiful and readable diff output.
 
 [![Build Status](https://travis-ci.com/miguelberrio91/diff.rs.svg?token=aFmpCKn8YpqsE7osReyL&branch=develop)](https://travis-ci.com/miguelberrio91/diff.rs)
 
-## Screenshot
+##### Screenshot
+![Screenshot][screenshot]
 
-![diff.rs](http://via.placeholder.com/800x600)
+[screenshot]: screenshot.png "Screenshot"
 
 ## Getting Started
 
 Install it in different ways:
 
+**actually not availible**
 ```
-cargo install diff.rs
+cargo install diff_rs
 ```
 
 or directly over github:
@@ -21,38 +23,14 @@ or directly over github:
 ```
 git clone https://github.com/miguelberrio91/diff.rs
 cd diff.rs
-make
-sudo make install
+make install
 ```
 
 ## Usage
 
-**Compare two files**
-```
-───┬─────────────────────────────────────────────────────────────────
-   │ M Cargo.toml @5ac01d12897f
-───┼─────────────────────────────────────────────────────────────────
- 1 │ #!/usr/bin/env bash
- 2 │
- 3 │-echo "Test"
- 3 │+echo "Test is going on"
-───┴─────────────────────────────────────────────────────────────────
-```
-
 **Git diff**
 ```
-$ git diff | diff-rs -c
-```
-
-```
-───┬─────────────────────────────────────────────────────────────────
-   │ M Cargo.toml @5ac01d12897f
-───┼─────────────────────────────────────────────────────────────────
- 1 │ #!/usr/bin/env bash
- 2 │
- 3 │-echo "Test"
- 3 │+echo "Test is going on"
-───┴─────────────────────────────────────────────────────────────────
+$ git diff | diff_rs
 ```
 
 ## Contributing
