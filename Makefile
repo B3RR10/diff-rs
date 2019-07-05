@@ -23,7 +23,7 @@ doc:
 	@xdg-open target/doc/diff_rs/index.html
 
 install: build
-	@$(CARGO) install
+	@$(CARGO) install --path=. --force
 
 publish:
 	@$(CARGO) publish
