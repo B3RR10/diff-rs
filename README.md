@@ -1,8 +1,7 @@
 # diff.rs
 
 A more beautiful and readable diff output.
-
-[![Build Status](https://travis-ci.com/miguelberrio91/diff.rs.svg?token=aFmpCKn8YpqsE7osReyL&branch=develop)](https://travis-ci.com/miguelberrio91/diff.rs)
+[![Build Status](https://travis-ci.org/miguelberrio91/diff-rs.svg?branch=develop)](https://travis-ci.org/miguelberrio91/diff-rs)
 
 ##### Screenshot
 ![Screenshot][screenshot]
@@ -15,7 +14,7 @@ Install it in different ways:
 
 **actually not availible**
 ```
-cargo install diff_rs
+cargo install diff-rs
 ```
 
 or directly over github:
@@ -30,7 +29,7 @@ make install
 
 **Git diff**
 ```
-$ git diff | diff_rs
+$ git diff | diff-rs
 ```
 
 ## Contributing
@@ -39,10 +38,10 @@ Feel free to open a pull request or only a issue to contribute to this project.
 
 ## Authors
 
-* **Miguel Berrio** - *Initial work* - [gh/miguelberrio91](https://github.com/miguelberrio91)
-* **Dimitrij Vogt** - *Initial work* - [gh/dvogt23](https://github.com/dvogt23)
+* **Miguel Berrio** - *Initial work* - [@miguelberrio91](https://github.com/miguelberrio91)
+* **Dimitrij Vogt** - *Initial work* - [@dvogt23](https://github.com/dvogt23)
 
-See also the list of [contributors](https://github.com/miguelberrio91/diff.rs/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/miguelberrio91/diff-rs/contributors) who participated in this project.
 
 ## License
 
