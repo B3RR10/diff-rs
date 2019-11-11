@@ -2,6 +2,7 @@
 name = "diff_rs"
 version = "0.1.0"
 authors = ["Miguel Berrio <me@miguelberrio.xyz>", "Dimitrij Vogt <divogt@dima23.de>"]
+edition = "2018"
 description = "A more beautiful and readable diff output."
 repository = ""
 documentation = ""

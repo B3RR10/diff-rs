@@ -1,6 +1,6 @@
 //! Preprocess the input to convert it to raw structures
 
-use file::{File, Hunk, LINE, MODIFIER};
+use crate::file::{File, Hunk, LINE, MODIFIER};
 
 #[derive(Debug, PartialEq)]
 enum RawLine<'a> {
@@ -61,7 +61,7 @@ named!(parse_filename(&str) -> (&str, &str), do_parse!(
         ((filename_a, filename_b))
 ));
 
-named!(parse_extended_header_mode(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header_mode(&str) -> ExtendedHeader<'_>, do_parse!(
         tag!("old mode ") >>
         old_mode: take_until_and_consume!("\n") >>
         tag!("new mode ") >>
@@ -69,15 +69,15 @@ named!(parse_extended_header_mode(&str) -> ExtendedHeader, do_parse!(
         (ExtendedHeader::ChMode((old_mode, new_mode)))
 ));
 
-named!(parse_extended_header_deleted(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header_deleted(&str) -> ExtendedHeader<'_>, do_parse!(
         tag!("deleted") >> take_until_and_consume!("\n") >> (ExtendedHeader::Deleted)
 ));
 
-named!(parse_extended_header_new_file(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header_new_file(&str) -> ExtendedHeader<'_>, do_parse!(
         tag!("new file") >> take_until_and_consume!("\n") >> (ExtendedHeader::NewFile)
 ));
 
-named!(parse_extended_header_copy_file(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header_copy_file(&str) -> ExtendedHeader<'_>, do_parse!(
         tag!("copy from ") >>
         from_path: take_until_and_consume!("\n") >>
         tag!("copy to ") >>
@@ -85,7 +85,7 @@ named!(parse_extended_header_copy_file(&str) -> ExtendedHeader, do_parse!(
         (ExtendedHeader::CopyFile((from_path, to_path)))
 ));
 
-named!(parse_extended_header_rename_file(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header_rename_file(&str) -> ExtendedHeader<'_>, do_parse!(
         tag!("rename from ") >>
         from_path: take_until_and_consume!("\n") >>
         tag!("rename to ") >>
@@ -93,19 +93,19 @@ named!(parse_extended_header_rename_file(&str) -> ExtendedHeader, do_parse!(
         (ExtendedHeader::RenameFile((from_path, to_path)))
 ));
 
-named!(parse_extended_header_similarity_index(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header_similarity_index(&str) -> ExtendedHeader<'_>, do_parse!(
         tag!("similarity index ") >>
         index: take_until_and_consume!("\n") >>
         (ExtendedHeader::SimilarityIndex(index))
 ));
 
-named!(parse_extended_header_dissimilarity_index(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header_dissimilarity_index(&str) -> ExtendedHeader<'_>, do_parse!(
         tag!("dissimilarity index ") >>
         index: take_until_and_consume!("\n") >>
         (ExtendedHeader::DissimilarityIndex(index))
 ));
 
-named!(parse_extended_header_index(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header_index(&str) -> ExtendedHeader<'_>, do_parse!(
         tag!("index") >>
         take_until_and_consume!("..") >>
         index: take_till!(is_whitespace) >>
@@ -113,7 +113,7 @@ named!(parse_extended_header_index(&str) -> ExtendedHeader, do_parse!(
         (ExtendedHeader::Index(index))
 ));
 
-named!(parse_extended_header(&str) -> ExtendedHeader, do_parse!(
+named!(parse_extended_header(&str) -> ExtendedHeader<'_>, do_parse!(
         extended_header: alt!(
             parse_extended_header_mode | parse_extended_header_deleted |
             parse_extended_header_new_file | parse_extended_header_copy_file |
@@ -121,7 +121,7 @@ named!(parse_extended_header(&str) -> ExtendedHeader, do_parse!(
             parse_extended_header_dissimilarity_index | parse_extended_header_index ) >>
         (extended_header)));
 
-named!(parse_raw_file_header(&str) -> RawHeader, do_parse!(
+named!(parse_raw_file_header(&str) -> RawHeader<'_>, do_parse!(
         filenames: parse_filename >>
         extended_headers: many0!(complete!(parse_extended_header)) >>
         (RawHeader {
@@ -155,35 +155,35 @@ named!(parse_lines_info(&str) -> (u32, u32, u32, u32), do_parse!(
         (start_line_left.unwrap(), lines_left.unwrap(), start_line_right.unwrap(), lines_right.unwrap())
 ));
 
-named!(parse_line_both(&str) -> RawLine, do_parse!(
+named!(parse_line_both(&str) -> RawLine<'_>, do_parse!(
         tag!(" ") >>
         content: take_till!(is_new_line) >>
         (RawLine::Both(content))
 ));
 
-named!(parse_line_left(&str) -> RawLine, do_parse!(
+named!(parse_line_left(&str) -> RawLine<'_>, do_parse!(
         tag!("-") >>
         content: take_till!(is_new_line) >>
         (RawLine::Left(content))
 ));
 
-named!(parse_line_right(&str) -> RawLine, do_parse!(
+named!(parse_line_right(&str) -> RawLine<'_>, do_parse!(
         tag!("+") >>
         content: take_till!(is_new_line) >>
         (RawLine::Right(content))
 ));
 
-named!(parse_line(&str) -> RawLine, do_parse!(
+named!(parse_line(&str) -> RawLine<'_>, do_parse!(
         line: alt!(parse_line_both | parse_line_left | parse_line_right) >>
         opt!(alt!(tag!("\n") | eof!())) >>
         (line)
 ));
 
-named!(parse_lines(&str) -> Vec<RawLine>,
+named!(parse_lines(&str) -> Vec<RawLine<'_>>,
        many0!(complete!(parse_line))
 );
 
-named!(parse_raw_file_hunk(&str) -> RawHunk, do_parse!(
+named!(parse_raw_file_hunk(&str) -> RawHunk<'_>, do_parse!(
         line_info: parse_lines_info >>
         lines: parse_lines >>
         (RawHunk {
@@ -192,7 +192,7 @@ named!(parse_raw_file_hunk(&str) -> RawHunk, do_parse!(
         })
 ));
 
-named!(parse_raw_file(&str) -> RawFile, do_parse!(
+named!(parse_raw_file(&str) -> RawFile<'_>, do_parse!(
         header: complete!(parse_raw_file_header) >>
         hunks: many0!(complete!(parse_raw_file_hunk)) >>
         (RawFile {
@@ -201,7 +201,7 @@ named!(parse_raw_file(&str) -> RawFile, do_parse!(
         })
 ));
 
-named!(parse_raw_files_intern(&str) -> Vec<RawFile>,
+named!(parse_raw_files_intern(&str) -> Vec<RawFile<'_>>,
        many0!(complete!(parse_raw_file))
 );
 
@@ -222,7 +222,7 @@ pub fn parse_raw_files<'a>(input: &'a str) -> Result<Vec<RawFile<'a>>, String> {
 }
 
 pub fn parse_content(input: &String) -> Vec<File> {
-    let raw_files: Vec<RawFile> = parse_raw_files(input).unwrap();
+    let raw_files: Vec<RawFile<'_>> = parse_raw_files(input).unwrap();
 
     let mut parsed_files: Vec<File> = Vec::new();
 
