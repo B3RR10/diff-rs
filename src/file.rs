@@ -48,7 +48,7 @@ impl Hunk {
 }
 
 impl fmt::Display for Hunk {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Content: {:?}", self.content)
     }
 }
@@ -108,7 +108,7 @@ impl File {
 }
 
 impl fmt::Display for File {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut hunk_str = String::new();
         if self.hunks.len() > 0 {
             hunk_str.push_str("Hunks: \n");

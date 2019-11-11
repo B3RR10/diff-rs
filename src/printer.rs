@@ -2,11 +2,11 @@
 //! this modul prints the file(s) objects from the parser with code
 //! highlighting and a colourful diff
 
-extern crate ansi_term;
-extern crate term_size;
+use ansi_term;
+use term_size;
 
 use self::ansi_term::{Colour, Style};
-use file::{File, LINE, MODIFIER};
+use crate::file::{File, LINE, MODIFIER};
 
 // file border colour
 const FIXED_COLOUR: u8 = 244;
