@@ -1,5 +1,5 @@
 [package]
-name = "diff_rs"
+name = "diff-rs"
 version = "0.1.0"
 authors = ["Miguel Berrio <me@miguelberrio.xyz>", "Dimitrij Vogt <divogt@dima23.de>"]
 edition = "2018"
@@ -18,7 +18,3 @@ clap = "2.*"
 regex = "1"
 nom = "^4.2"
 strip-ansi-escapes = "0.1.0"
-
-[[bin]]
-name = "diff-rs"
-doc = false
