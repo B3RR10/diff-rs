@@ -6,12 +6,11 @@ mod parser;
 mod printer;
 
 #[macro_use]
-extern crate clap;
-#[macro_use]
 extern crate nom;
 
-use clap::{App, Arg};
+use clap::{crate_authors, crate_description, crate_name, crate_version, App, Arg};
 use std::io::{self, Read};
+use strip_ansi_escapes;
 
 fn main() {
     // create cli app
@@ -32,8 +31,9 @@ fn main() {
 
     let mut buffer = String::new();
     io::stdin().read_to_string(&mut buffer).unwrap();
+    let plain_buffer = String::from_utf8(strip_ansi_escapes::strip(&buffer).unwrap()).unwrap();
 
-    let files: Vec<file::File> = parser::parse_content(&buffer);
+    let files: Vec<file::File> = parser::parse_content(&plain_buffer);
 
     println!("{}", printer::print(&files, columnview));
 }

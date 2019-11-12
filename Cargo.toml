@@ -17,7 +17,8 @@ ansi_term = "0.11"
 clap = "2.*"
 regex = "1"
 nom = "^4.2"
+strip-ansi-escapes = "0.1.0"
 
 [[bin]]
-name = "diff_rs"
+name = "diff-rs"
 doc = false
