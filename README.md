@@ -1,4 +1,4 @@
-# diff.rs
+# diff-rs
 
 A more beautiful and readable diff output.
 [![Build Status](https://travis-ci.org/B3RR10/diff-rs.svg?branch=develop)](https://travis-ci.org/B3RR10/diff-rs)
