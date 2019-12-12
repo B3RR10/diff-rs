@@ -221,7 +221,7 @@ pub fn parse_raw_files<'a>(input: &'a str) -> Result<Vec<RawFile<'a>>, String> {
     }
 }
 
-pub fn parse_content(input: &String) -> Vec<File> {
+pub fn parse_content(input: &str) -> Vec<File> {
     let raw_files: Vec<RawFile<'_>> = parse_raw_files(input).unwrap();
 
     let mut parsed_files: Vec<File> = Vec::new();
@@ -297,7 +297,7 @@ mod tests {
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -324,7 +324,7 @@ mod tests {
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -338,7 +338,7 @@ mod tests {
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -355,7 +355,7 @@ mod tests {
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -372,7 +372,7 @@ mod tests {
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -386,7 +386,7 @@ mod tests {
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -400,7 +400,7 @@ mod tests {
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -415,7 +415,7 @@ mod tests {
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -445,7 +445,7 @@ index 2b2338d..43febe7 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -461,7 +461,7 @@ index 2b2338d..43febe7 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -476,7 +476,7 @@ index 2b2338d..43febe7 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -491,7 +491,7 @@ index 2b2338d..43febe7 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -506,7 +506,7 @@ index 2b2338d..43febe7 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -529,7 +529,7 @@ index 2b2338d..43febe7 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -566,7 +566,7 @@ index 2b2338d..43febe7 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -613,7 +613,7 @@ index c64d930..e475af3 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -683,7 +683,7 @@ index c5d5782..5014215 100644
             }
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -753,7 +753,7 @@ index db1afc7..6b65689 100644
             ),
             Err(e) => {
                 println!("Error: {:?}", e);
-                assert!(false)
+                panic!();
             }
         }
     }
@@ -771,8 +771,7 @@ index 5005045..73ea95f 100644
  pineapples
 -kiwis
 +kiwi
-"#
-        .into();
+"#;
         let result = parse_content(&input);
         let expected = File::new(
             MODIFIER::MODIFIED,
@@ -923,8 +922,7 @@ diff --git a/list.txt b/list_renamed.txt
 similarity index 100%
 rename from list.txt
 rename to list_renamed.txt
-"#
-        .into();
+"#;
         let result = parse_content(&input);
         let expected_file_1 = File::new(
             MODIFIER::ADD,

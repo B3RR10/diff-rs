@@ -43,7 +43,7 @@ pub struct Hunk {
 
 impl Hunk {
     pub fn new(content: Vec<LINE>) -> Hunk {
-        Hunk { content: content }
+        Hunk { content }
     }
 }
 
@@ -64,32 +64,27 @@ pub struct File {
 impl File {
     pub fn new(modifier: MODIFIER, filename: String, commit_id: String, hunks: Vec<Hunk>) -> File {
         File {
-            modifier: modifier,
-            filename: filename,
-            commit_id: commit_id,
-            hunks: hunks,
+            modifier,
+            filename,
+            commit_id,
+            hunks,
         }
     }
 
     pub fn get_max_line_number_size(&self) -> usize {
-        self.hunks
+        *self
+            .hunks
             .iter()
             .map(|hunk| {
                 hunk.content
                     .iter()
                     .map(|line| match line {
-                        LINE::ADD {
-                            number: nr,
-                            line: _,
-                        } => nr,
-                        LINE::REM {
-                            number: nr,
-                            line: _,
-                        } => nr,
+                        LINE::ADD { number: nr, .. } => nr,
+                        LINE::REM { number: nr, .. } => nr,
                         LINE::NOP {
                             number_left: nr1,
                             number_right: nr2,
-                            line: _,
+                            ..
                         } => {
                             if nr1 > nr2 {
                                 nr1
@@ -103,14 +98,13 @@ impl File {
             })
             .max()
             .unwrap()
-            .clone()
     }
 }
 
 impl fmt::Display for File {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut hunk_str = String::new();
-        if self.hunks.len() > 0 {
+        if !self.hunks.is_empty() {
             hunk_str.push_str("Hunks: \n");
             self.hunks
                 .iter()
