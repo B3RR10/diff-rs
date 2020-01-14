@@ -1,6 +1,9 @@
 //! Preprocess the input to convert it to raw structures
 
 use crate::file::{File, Hunk, LINE, MODIFIER};
+use nom::{
+    alt, complete, do_parse, eof, many0, map, named, opt, tag, take_till, take_until_and_consume,
+};
 
 #[derive(Debug, PartialEq)]
 enum RawLine<'a> {

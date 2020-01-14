@@ -5,14 +5,11 @@ mod file;
 mod parser;
 mod printer;
 
-#[macro_use]
-extern crate nom;
-
 use clap::{crate_authors, crate_description, crate_name, crate_version, App, Arg};
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use strip_ansi_escapes;
 
-fn main() {
+fn main() -> io::Result<()> {
     // create cli app
     let matches = App::new(crate_name!())
         .version(crate_version!())
@@ -33,7 +30,18 @@ fn main() {
     io::stdin().read_to_string(&mut buffer).unwrap();
     let plain_buffer = String::from_utf8(strip_ansi_escapes::strip(&buffer).unwrap()).unwrap();
 
-    let files: Vec<file::File> = parser::parse_content(&plain_buffer);
+    if plain_buffer.starts_with("diff --git") {
+        let files: Vec<file::File> = parser::parse_content(&plain_buffer);
 
-    println!("{}", printer::print(&files, columnview));
+        println!("{}", printer::print(&files, columnview));
+
+        Ok(())
+    } else {
+        let stdout = io::stdout();
+        let mut handle = stdout.lock();
+
+        handle.write_all(buffer.as_bytes())?;
+
+        Ok(())
+    }
 }
